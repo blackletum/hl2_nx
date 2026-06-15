@@ -31,7 +31,7 @@ typedef struct {
   int screen_width;
   int screen_height;
   char install_root[256]; // fixed to DEFAULT_INSTALL_ROOT (not in config.txt)
-  char gamedir[64];       // fixed "hl2", the -game arg (not in config.txt)
+  char gamedir[64];       // -game arg: hl2 (default), episodic (EP1), or ep2 (EP2)
   char args[256];         // extra command line (default "-console")
   char lang[32];          // LANG env (default "en_US")
 } Config;

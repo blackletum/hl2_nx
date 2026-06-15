@@ -16,6 +16,7 @@
 #define CONFIG_VARS \
   CONFIG_VAR_INT(screen_width); \
   CONFIG_VAR_INT(screen_height); \
+  CONFIG_VAR_STR(gamedir); \
   CONFIG_VAR_STR(args); \
   CONFIG_VAR_STR(lang);
 
