@@ -249,6 +249,19 @@ int __cxa_thread_atexit_impl_fake(void (*fn)(void *), void *arg, void *dso) {
   return 0;
 }
 
+// The engine calls exit()/_exit() from Sys_Quit once its own shutdown (config +
+// save writes) is done. Newlib exit() would then run __call_exitprocs, firing
+// every C++ static destructor the game modules registered through __cxa_atexit;
+// those reach into engine singletons and module code already torn down, so one
+// calls a null vtable slot and faults (Instruction Abort at PC=0 -- the crash
+// seen on Quit). The process is terminating regardless, so flush stdio and hand
+// off to libnx's exit, which finalizes only our own module and skips that chain.
+void NX_NORETURN exit_fake(int code) {
+  fflush(NULL);
+  extern void NX_NORETURN __libnx_exit(int rc);
+  __libnx_exit(code);
+}
+
 void __assert2_fake(const char *file, int line, const char *func, const char *expr) {
   debugPrintf("assertion failed:\n%s:%d (%s): %s\n", file, line, func, expr);
   abort();

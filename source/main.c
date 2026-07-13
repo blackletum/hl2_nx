@@ -24,7 +24,6 @@
 #include "jni_fake.h"
 #include "picker.h"
 #include "game_patches.h"
-#include "thread_affinity.h"
 
 static void *heap_so_base = NULL;
 static size_t heap_so_limit = 0;
@@ -252,8 +251,6 @@ static void load_modules(void) {
   }
   for (unsigned int i = 0; i < NUM_MODULES; i++) {
     so_execute_init_array(&modules[i]);
-    if (!strcmp(modules[i].name, "libtier0.so"))
-      apply_post_init_game_patches();
     so_free_temp(&modules[i]);
   }
 }
@@ -435,7 +432,6 @@ extern volatile int g_video_playing;
 
 static void *clock_thread(void *arg) {
   (void)arg;
-  thread_affinity_pin_background_thread();
   unsigned ring[CLK_WIN_TICKS] = { 0 };
   unsigned win_sum = 0;
   unsigned last_swap = sdl_swap_count;
@@ -498,7 +494,6 @@ int main(void) {
   fake_tls_install();
   jni_init();
   proc_files_init(config.install_root);
-  thread_affinity_init();
 
   load_modules();
 

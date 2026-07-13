@@ -31,7 +31,6 @@
 #include "video_player.h"
 #include "config.h"
 #include "util.h"
-#include "thread_affinity.h"
 
 #ifndef GL_FRAMEBUFFER_SRGB
 #define GL_FRAMEBUFFER_SRGB 0x8DB9
@@ -465,7 +464,6 @@ typedef struct {
 
 static void *video_thread(void *p) {
   VidThreadArg *a = (VidThreadArg *)p;
-  thread_affinity_pin_render_thread();
   if (SDL_GL_MakeCurrent(a->win, a->ctx) != 0) {
     debugPrintf("video: worker SDL_GL_MakeCurrent failed: %s\n", SDL_GetError());
     return NULL;

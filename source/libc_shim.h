@@ -71,6 +71,7 @@ void android_set_abort_message_fake(const char *msg);
 int __register_atfork_fake(void);
 int __cxa_thread_atexit_impl_fake(void (*fn)(void *), void *arg, void *dso);
 void __assert2_fake(const char *file, int line, const char *func, const char *expr);
+void exit_fake(int code) __attribute__((noreturn));
 
 // fd/file
 int open_fake(const char *path, int flags, ...);

@@ -12,12 +12,6 @@
 #include "so_util.h"
 #include "util.h"
 
-#define CPUINFO_FLAGS_OFFSET    4
-#define CPUINFO_MIN_SIZE        8
-
-#define CPU_FEATURE_SSE  (1u << 3)
-#define CPU_FEATURE_SSE2 (1u << 4)
-
 static int patch_save_dialog_fastswitch(so_module *gameui) {
   static const char symbol[] =
       "_ZN19CBaseSaveGameDialog16OnKeyCodePressedE12ButtonCode_t";
@@ -74,47 +68,8 @@ static int patch_save_dialog_fastswitch(so_module *gameui) {
   return 1;
 }
 
-static int patch_arm64_cpu_features(so_module *tier0) {
-  typedef const void *(*get_cpu_information_fn)(void);
-
-  uintptr_t address = so_lookup_export(tier0, "GetCPUInformation");
-  if (!address) {
-    debugPrintf("CPU patch: GetCPUInformation unavailable\n");
-    return 0;
-  }
-
-  uint8_t *cpu_info = (uint8_t *)((get_cpu_information_fn)address)();
-  if (!cpu_info) {
-    debugPrintf("CPU patch: GetCPUInformation returned NULL\n");
-    return 0;
-  }
-
-  int cpu_info_size = 0;
-  memcpy(&cpu_info_size, cpu_info, sizeof(cpu_info_size));
-  if (cpu_info_size < CPUINFO_MIN_SIZE) {
-    debugPrintf("CPU patch: unexpected CPUInformation size %d\n", cpu_info_size);
-    return 0;
-  }
-
-  /*
-   * The Android ARM64 modules contain NEON implementations behind Source's
-   * legacy SSE/SSE2 capability switches. tier0 cannot infer those switches
-   * from ARM /proc/cpuinfo, so advertise only the two verified dispatch bits.
-   */
-  cpu_info[CPUINFO_FLAGS_OFFSET] =
-      cpu_info[CPUINFO_FLAGS_OFFSET] | CPU_FEATURE_SSE | CPU_FEATURE_SSE2;
-  debugPrintf("CPU patch: enabling NEON-backed SSE/SSE2 dispatch\n");
-  return 1;
-}
-
 void apply_game_patches(void) {
   so_module *gameui = so_find_module("libGameUI.so");
   if (gameui)
     patch_save_dialog_fastswitch(gameui);
-}
-
-void apply_post_init_game_patches(void) {
-  so_module *tier0 = so_find_module("libtier0.so");
-  if (tier0)
-    patch_arm64_cpu_features(tier0);
 }
